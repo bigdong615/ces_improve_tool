@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My Follow-ups - CES Improve Tool{% endblock %}
+{% block content %}
+<h2 class="mb-4">My Follow-ups</h2>
+<table class="table table-hover">
+    <thead><tr><th>ID</th><th>Score</th><th>Customer</th><th>AI Category</th><th>Status</th><th>Created</th><th></th></tr></thead>
+    <tbody>
+    {% for f in followups %}
+    <tr>
+        <td>{{ f.id }}</td>
+        <td><span class="score-badge score-{{ f.survey.score }}">{{ f.survey.score }}</span></td>
+        <td>{{ f.survey.incident.customer.name }}</td>
+        <td>{% if f.survey.ai_category %}<span class="badge bg-secondary">{{ f.survey.ai_category }}</span>{% endif %}</td>
+        <td>
+            {% if f.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+            {% elif f.status == 'in_progress' %}<span class="badge bg-primary">In Progress</span>
+            {% elif f.status == 'completed' %}<span class="badge bg-success">Completed</span>
+            {% else %}<span class="badge bg-danger">Escalated</span>{% endif %}
+        </td>
+        <td>{{ f.created_at.strftime('%Y-%m-%d') }}</td>
+        <td><a href="/followups/{{ f.id }}" class="btn btn-sm btn-outline-primary">Handle</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

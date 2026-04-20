@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Survey #{{ survey.id }} - CES Improve Tool{% endblock %}
+{% block content %}
+<h2>Survey #{{ survey.id }}</h2>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card p-3 mb-3">
+            <div class="d-flex align-items-center mb-3">
+                <span class="score-badge score-{{ survey.score }} me-3">{{ survey.score }}</span>
+                <div><strong>{{ survey.incident.customer.name }}</strong><br><small class="text-muted">{{ survey.incident.product_component }} — Incident #{{ survey.incident.id }}</small></div>
+            </div>
+            <p><strong>Comment:</strong> {{ survey.comment or 'No comment provided' }}</p>
+            <p class="text-muted small">Submitted: {{ survey.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+        {% if survey.ai_category %}
+        <div class="card p-3 mb-3">
+            <h5>AI Analysis</h5>
+            <p>Category: <span class="badge bg-info">{{ survey.ai_category }}</span></p>
+            <div class="confidence-bar" style="width:200px"><div class="confidence-fill" style="width:{{ (survey.ai_confidence or 0) * 100 }}%"></div></div>
+            <small class="text-muted">Confidence: {{ ((survey.ai_confidence or 0) * 100)|round(0) }}%</small>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h5>Incident Details</h5>
+            <p><strong>Engineer:</strong> {{ survey.incident.engineer.name }}</p>
+            <p><strong>Created:</strong> {{ survey.incident.created_at.strftime('%Y-%m-%d') }}</p>
+            <p><strong>Resolved:</strong> {{ survey.incident.resolved_at.strftime('%Y-%m-%d') if survey.incident.resolved_at else 'N/A' }}</p>
+        </div>
+        {% if survey.followup %}
+        <a href="/followups/{{ survey.followup.id }}" class="btn btn-primary w-100 mt-3">View Follow-up →</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

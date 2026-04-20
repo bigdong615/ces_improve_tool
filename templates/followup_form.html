@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Follow-up #{{ followup.id }} - CES Improve Tool{% endblock %}
+{% block content %}
+<h2>Follow-up #{{ followup.id }}</h2>
+<div class="row">
+    <div class="col-md-8">
+        <!-- Survey Info -->
+        <div class="card p-3 mb-3">
+            <h5>Survey Details</h5>
+            <div class="d-flex align-items-center mb-2">
+                <span class="score-badge score-{{ followup.survey.score }} me-3">{{ followup.survey.score }}</span>
+                <div><strong>{{ followup.survey.incident.customer.name }}</strong> — {{ followup.survey.incident.product_component }}</div>
+            </div>
+            <p><strong>Comment:</strong> {{ followup.survey.comment or 'No comment' }}</p>
+            {% if followup.survey.ai_category %}
+            <p>AI Category: <span class="badge bg-info">{{ followup.survey.ai_category }}</span>
+                <small class="text-muted ms-2">Confidence: {{ ((followup.survey.ai_confidence or 0)*100)|round(0) }}%</small></p>
+            {% endif %}
+        </div>
+
+        <!-- Send Email -->
+        <div class="card p-3 mb-3">
+            <h5>📧 Send Email</h5>
+            <form method="POST" action="/followups/{{ followup.id }}/send-email">
+                <div class="mb-2">
+                    <label class="form-label">Template</label>
+                    <select name="template" class="form-select">
+                        <option value="initial_followup">Initial Follow-up</option>
+                        <option value="resolution_update">Resolution Update</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Send Email to {{ followup.survey.incident.customer.contact_person }}</button>
+                {% if followup.email_sent_at %}
+                <small class="text-success ms-2">Last sent: {{ followup.email_sent_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Schedule Call -->
+        <div class="card p-3 mb-3">
+            <h5>📞 Schedule Call</h5>
+            <form method="POST" action="/followups/{{ followup.id }}/schedule-call">
+                <div class="row mb-2">
+                    <div class="col"><input type="date" name="call_date" class="form-control" required></div>
+                    <div class="col"><input type="time" name="call_time" class="form-control" value="10:00" required></div>
+                </div>
+                <button type="submit" class="btn btn-outline-primary">Schedule &amp; Download .ics</button>
+                {% if followup.call_scheduled_at %}
+                <small class="text-success ms-2">Scheduled: {{ followup.call_scheduled_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Complete -->
+        {% if followup.status != 'completed' %}
+        <div class="card p-3 mb-3">
+            <h5>✅ Complete Follow-up</h5>
+            <form method="POST" action="/followups/{{ followup.id }}/complete">
+                <div class="mb-2">
+                    <label class="form-label">Confirmed Category</label>
+                    <select name="category" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.code }}" {% if followup.engineer_category == cat.code %}selected{% endif %}>{{ cat.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="3">{{ followup.notes or '' }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Mark as Completed</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h5>Status</h5>
+            <p>
+                {% if followup.status == 'pending' %}<span class="badge bg-warning text-dark">Pending</span>
+                {% elif followup.status == 'in_progress' %}<span class="badge bg-primary">In Progress</span>
+                {% elif followup.status == 'completed' %}<span class="badge bg-success">Completed</span>
+                {% else %}<span class="badge bg-danger">Escalated</span>{% endif %}
+            </p>
+            <p><strong>Contact:</strong> {{ followup.contact_method or 'Not yet contacted' }}</p>
+            <p><strong>Created:</strong> {{ followup.created_at.strftime('%Y-%m-%d') }}</p>
+            {% if followup.completed_at %}
+            <p><strong>Completed:</strong> {{ followup.completed_at.strftime('%Y-%m-%d') }}</p>
+            {% endif %}
+            {% if followup.engineer_category %}
+            <p><strong>Category:</strong> {{ followup.engineer_category }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

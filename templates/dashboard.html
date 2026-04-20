@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - CES Improve Tool{% endblock %}
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3"><div class="card stat-card primary p-3"><div class="text-muted small">Total Surveys</div><div class="fs-3 fw-bold">{{ total_surveys }}</div></div></div>
+    <div class="col-md-3"><div class="card stat-card success p-3"><div class="text-muted small">Average Score</div><div class="fs-3 fw-bold">{{ avg_score }}/5</div></div></div>
+    <div class="col-md-3"><div class="card stat-card warning p-3"><div class="text-muted small">Low Score Rate</div><div class="fs-3 fw-bold">{{ low_score_pct }}%</div></div></div>
+    <div class="col-md-3"><div class="card stat-card danger p-3"><div class="text-muted small">Pending Follow-ups</div><div class="fs-3 fw-bold">{{ pending_followups }}</div></div></div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card p-3"><h5>Score Distribution</h5><canvas id="scoreChart"></canvas></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3"><h5>Follow-up Status</h5><canvas id="statusChart"></canvas></div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card p-3"><h5>Monthly Trend</h5><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3"><h5>Low Score Reasons</h5>
+            {% if category_dist %}
+            <canvas id="reasonChart"></canvas>
+            {% else %}
+            <p class="text-muted">No confirmed categories yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Team Stats -->
+<div class="card p-3 mb-4">
+    <h5>Team Leaderboard</h5>
+    <table class="table table-sm">
+        <thead><tr><th>Engineer</th><th>Total</th><th>Completed</th><th>Rate</th></tr></thead>
+        <tbody>
+        {% for s in team_stats %}
+        <tr><td>{{ s.name }}</td><td>{{ s.total }}</td><td>{{ s.completed }}</td>
+            <td><div class="progress" style="height:20px"><div class="progress-bar bg-success" style="width:{{ s.rate }}%">{{ s.rate }}%</div></div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const scoreDist = {{ score_dist | tojson }};
+new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: { labels: scoreDist.map(d=>d.score+' ⭐'), datasets: [{label:'Count', data: scoreDist.map(d=>d.count),
+        backgroundColor:['#dc3545','#fd7e14','#ffc107','#20c997','#198754']}]},
+    options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}}}
+});
+
+const sc = {{ status_counts | tojson }};
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(sc), datasets: [{data: Object.values(sc),
+        backgroundColor:['#ffc107','#0d6efd','#198754','#dc3545']}]}
+});
+
+const trend = {{ monthly_trend | tojson }};
+new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: trend.map(d=>d.month), datasets: [{label:'Avg Score', data: trend.map(d=>d.avg_score),
+        borderColor:'#0d6efd', tension:0.3, fill:false}]},
+    options: { scales:{y:{min:1, max:5}}}
+});
+
+{% if category_dist %}
+const cats = {{ category_dist | tojson }};
+new Chart(document.getElementById('reasonChart'), {
+    type: 'pie',
+    data: { labels: cats.map(d=>d.category), datasets: [{data: cats.map(d=>d.count),
+        backgroundColor:['#dc3545','#fd7e14','#ffc107','#20c997','#0d6efd','#6f42c1','#adb5bd']}]}
+});
+{% endif %}
+</script>
+{% endblock %}

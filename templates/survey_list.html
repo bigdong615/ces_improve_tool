@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Surveys - CES Improve Tool{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>All Surveys</h2>
+    <div>
+        <a href="/surveys" class="btn btn-sm {% if not score_filter %}btn-primary{% else %}btn-outline-primary{% endif %}">All</a>
+        {% for s in range(1,6) %}
+        <a href="/surveys?score={{ s }}" class="btn btn-sm {% if score_filter == s %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ s }}⭐</a>
+        {% endfor %}
+    </div>
+</div>
+<table class="table table-hover">
+    <thead><tr><th>ID</th><th>Score</th><th>Customer</th><th>Product</th><th>Comment</th><th>AI Category</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+    {% for survey in surveys %}
+    <tr>
+        <td>{{ survey.id }}</td>
+        <td><span class="score-badge score-{{ survey.score }}">{{ survey.score }}</span></td>
+        <td>{{ survey.incident.customer.name }}</td>
+        <td>{{ survey.incident.product_component }}</td>
+        <td>{{ survey.comment[:60] }}{% if survey.comment|length > 60 %}...{% endif %}</td>
+        <td>{% if survey.ai_category %}<span class="badge bg-secondary">{{ survey.ai_category }}</span>{% endif %}</td>
+        <td>{{ survey.submitted_at.strftime('%Y-%m-%d') }}</td>
+        <td><a href="/surveys/{{ survey.id }}" class="btn btn-sm btn-outline-primary">View</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
